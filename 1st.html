@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Study Notes</title>
+  <style>
+    :root {
+      --bg-light: linear-gradient(to right, #fddde6, #d0f0f6);
+      --bg-dark: linear-gradient(to right, #2c3e50, #4ca1af);
+      --bg-pastel: linear-gradient(to right, #ffe4e1, #e6e6fa);
+      --bg-mint: linear-gradient(to right, #b2fefa, #0ed2f7);
+      --text-light: #000;
+      --text-dark: #fff;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.5s, color 0.5s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body.dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    body.pastel-mode {
+      background: var(--bg-pastel);
+      color: var(--text-light);
+    }
+
+    body.mint-mode {
+      background: var(--bg-mint);
+      color: var(--text-light);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .theme-toggle {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .theme-toggle button {
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      border: none;
+      background-color: #444;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 0.8rem 1.2rem;
+      font-size: 1.2rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    .modal-content label,
+    .modal-content input,
+    .modal-content textarea,
+    .modal-content select,
+    .modal-content button {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-content button {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .modal-content .save-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .modal-content .cancel-btn {
+      background: #ccc;
+    }
+
+    .notes-wrapper {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .notes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .note {
+      width: 220px;
+      padding: 1rem;
+      border-radius: 10px;
+      background-color: #fff;
+      color: #000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+      transition: transform 0.2s;
+
+      /* 🛠 Fix for long unbroken text */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+
+    body.dark-mode .note {
+      background-color: #34495e;
+      color: #fff;
+    }
+
+    body.pastel-mode .note {
+      background-color: #fff0f5;
+      color: #000;
+    }
+
+    body.mint-mode .note {
+      background-color: #e0ffff;
+      color: #000;
+    }
+
+    .note:hover {
+      transform: translateY(-5px);
+    }
+
+    .note h3 {
+      margin: 0.5rem 0 0.25rem;
+    }
+
+    .note p {
+      margin: 0.25rem 0 0.5rem;
+    }
+
+    .note small {
+      font-size: 0.75rem;
+    }
+
+    .note .menu {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: none;
+    }
+
+    .note:hover .menu {
+      display: block;
+    }
+
+    .menu-options {
+      position: absolute;
+      top: 2rem;
+      right: 0.5rem;
+      background: #fff;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      border-radius: 5px;
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .note.show-menu .menu-options {
+      display: flex;
+    }
+
+    .menu-options button {
+      padding: 0.4rem 1rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .low { background-color: #d4edda; color: #155724; }
+    .medium { background-color: #fff3cd; color: #856404; }
+    .high { background-color: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h1>📓 My Study Notes</h1>
+  <p>👋 Hello students! Welcome to your personal study dashboard. Let's stay organized 💡</p>
+
+  <div class="theme-toggle">
+    <button onclick="setTheme('default')">Default Theme</button>
+    <button onclick="setTheme('dark')">Dark Mode</button>
+    <button onclick="setTheme('pastel')">Pastel Mode</button>
+    <button onclick="setTheme('mint')">Mint Mode</button>
+  </div>
+
+  <div class="modal" id="noteModal">
+    <div class="modal-content">
+      <label for="subject">Subject</label>
+      <input type="text" id="subject" placeholder="e.g., Math" />
+
+      <label for="icon">Icon (optional)</label>
+      <input type="text" id="icon" placeholder="e.g., 📚" />
+
+      <label for="content">Note Content</label>
+      <textarea id="content" rows="3" placeholder="Write your note here..."></textarea>
+
+      <label for="priority">Priority</label>
+      <select id="priority">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+
+      <button class="save-btn" onclick="saveNote()">Save Note</button>
+      <button class="cancel-btn" onclick="toggleModal(false)">Cancel</button>
+    </div>
+  </div>
+
+  <button class="add-btn" onclick="openModalForAdd()">➕ Add Note</button>
+
+  <div class="notes-wrapper">
+    <div class="notes" id="notesContainer"></div>
+  </div>
+
+  <script>
+    const notesContainer = document.getElementById("notesContainer");
+    const modal = document.getElementById("noteModal");
+    let notes = JSON.parse(localStorage.getItem("studyNotes")) || [];
+    let editIndex = null;
+
+    function renderNotes() {
+      notesContainer.innerHTML = "";
+      notes.forEach((note, index) => {
+        const div = document.createElement("div");
+        div.className = "note";
+        div.innerHTML = `
+          <div class="menu" onclick="toggleMenu(this)">&#x22EE;</div>
+          <div class="menu-options">
+            <button onclick="editNote(${index})">Edit</button>
+            <button onclick="deleteNote(${index})">Delete</button>
+          </div>
+          <div style="font-size: 1.5rem">${note.icon}</div>
+          <h3>${note.subject}</h3>
+          <span class="badge ${note.priority}">${note.priority.toUpperCase()}</span>
+          <p>${note.content}</p>
+          <small>${note.date}</small>
+        `;
+        notesContainer.appendChild(div);
+      });
+    }
+
+    function saveNote() {
+      const subject = document.getElementById("subject").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const icon = document.getElementById("icon").value.trim();
+      const priority = document.getElementById("priority").value;
+      const date = new Date().toLocaleDateString();
+
+      if (!subject || !content) return alert("Fill in all fields");
+
+      const newNote = { subject, content, icon, priority, date };
+
+      if (editIndex !== null) {
+        notes[editIndex] = newNote;
+        editIndex = null;
+      } else {
+        notes.push(newNote);
+      }
+
+      localStorage.setItem("studyNotes", JSON.stringify(notes));
+      toggleModal(false);
+      renderNotes();
+    }
+
+    function openModalForAdd() {
+      editIndex = null;
+      document.getElementById("subject").value = "";
+      document.getElementById("content").value = "";
+      document.getElementById("icon").value = "";
+      document.getElementById("priority").value = "low";
+      toggleModal(true);
+    }
+
+    function editNote(index) {
+      const note = notes[index];
+      document.getElementById("subject").value = note.subject;
+      document.getElementById("content").value = note.content;
+      document.getElementById("icon").value = note.icon;
+      document.getElementById("priority").value = note.priority;
+      editIndex = index;
+      toggleModal(true);
+    }
+
+    function deleteNote(index) {
+      if (confirm("Are you sure you want to delete this note?")) {
+        notes.splice(index, 1);
+        localStorage.setItem("studyNotes", JSON.stringify(notes));
+        renderNotes();
+      }
+    }
+
+    function toggleMenu(menuBtn) {
+      const noteDiv = menuBtn.closest('.note');
+      document.querySelectorAll('.note').forEach(n => n.classList.remove('show-menu'));
+      noteDiv.classList.add('show-menu');
+    }
+
+    function toggleModal(show) {
+      modal.style.display = show ? "flex" : "none";
+    }
+
+    function setTheme(theme) {
+      document.body.classList.remove("dark-mode", "pastel-mode", "mint-mode");
+      if (theme === 'dark') document.body.classList.add("dark-mode");
+      else if (theme === 'pastel') document.body.classList.add("pastel-mode");
+      else if (theme === 'mint') document.body.classList.add("mint-mode");
+    }
+
+    renderNotes();
+  </script>
+</body>
+</html>
+<!-- This is a simple study notes application with themes and note management features. -->
+<!-- Feel free to modify and expand it as needed! -->
